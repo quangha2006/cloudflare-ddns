@@ -13,9 +13,13 @@
         "",
         "remove_or_replace_with_your_subdomain"
       ],
-      "proxied": false
+      "proxied": {
+        "default": true,
+        "remove_or_replace_with_your_subdomain": false
+      }
     }
   ],
   "a": true,
-  "aaaa": true
+  "aaaa": false,
+  "repeattime":15
 }

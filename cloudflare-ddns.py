@@ -79,11 +79,14 @@ def commitRecord(ip):
         ttl = 300 # default Cloudflare TTL
         for subdomain in subdomains:
             subdomain = subdomain.lower().strip()
+            proxi = option["proxied"]["default"]
+            if subdomain != '' and subdomain in option["proxied"]:
+                proxi = option["proxied"][subdomain]
             record = {
                 "type": ip["type"],
                 "name": subdomain,
                 "content": ip["ip"],
-                "proxied": option["proxied"],
+                "proxied": proxi,
                 "ttl": ttl
             }
             dns_records = cf_api(
@@ -139,13 +142,19 @@ def cf_api(endpoint, method, config, headers={}, data=False):
             "X-Auth-Key": config['authentication']['api_key']['api_key'],
         }
 
-    if(data == False):
-        response = requests.request(
-            method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers)
-    else:
-        response = requests.request(
-            method, "https://api.cloudflare.com/client/v4/" + endpoint,
-            headers=headers, json=data)
+    try:
+        if(data == False):
+            response = requests.request(method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers)
+        else:
+            response = requests.request(method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers, json=data)
+    except requests.exceptions.RequestException as err:
+        print("OOps: Something Else",err)
+    except requests.exceptions.HTTPError as errh:
+        print("Http Error:",errh)
+    except requests.exceptions.ConnectionError as errc:
+        print("Error Connecting:",errc)
+    except requests.exceptions.Timeout as errt:
+        print("Timeout Error:",errt)
 
     if response.ok:
         return response.json()
@@ -161,10 +170,11 @@ def updateIPs(ips):
 if __name__ == '__main__':
     PATH = os.getcwd() + "/"
     version = float(str(sys.version_info[0]) + "." + str(sys.version_info[1]))
-    shown_ipv4_warning = False
-    shown_ipv6_warning = False
+    shown_ipv4_warning = True
+    shown_ipv6_warning = True
     ipv4_enabled = True
     ipv6_enabled = True
+    delaytime = 15
 
     if(version < 3.5):
         raise Exception("🐍 This script requires Python 3.5+")
@@ -173,27 +183,28 @@ if __name__ == '__main__':
     try:
         with open(PATH + "config.json") as config_file:
             config = json.loads(config_file.read())
-    except:
-        print("😡 Error reading config.json")
+    except Exception as e:
+        print("😡 Error reading config.json, Exception: {0}".format(e))
         time.sleep(60) # wait 60 seconds to prevent excessive logging on docker auto restart
 
     if config is not None:
         try:
             ipv4_enabled = config["a"]
             ipv6_enabled = config["aaaa"]
+            delaytime = config["repeattime"]
         except:
             ipv4_enabled = True
             ipv6_enabled = True
             print("⚙️ Individually disable IPv4 or IPv6 with new config.json options. Read more about it here: https://github.com/timothymiller/cloudflare-ddns/blob/master/README.md")
         if(len(sys.argv) > 1):
             if(sys.argv[1] == "--repeat"):
-                delay = 5*60
+                delay = delaytime * 60
                 if ipv4_enabled and ipv6_enabled:
-                    print("🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every 5 minutes")
+                    print("🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every {0} minutes".format(delaytime))
                 elif ipv4_enabled and not ipv6_enabled:
-                    print("🕰️ Updating IPv4 (A) records every 5 minutes")
+                    print("🕰️ Updating IPv4 (A) records every {0} minutes".format(delaytime))
                 elif ipv6_enabled and not ipv4_enabled:
-                    print("🕰️ Updating IPv6 (AAAA) records every 5 minutes")
+                    print("🕰️ Updating IPv6 (AAAA) records every {0} minutes".format(delaytime))
                 next_time = time.time()
                 killer = GracefulExit()
                 prev_ips = None
