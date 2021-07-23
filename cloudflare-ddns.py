@@ -147,6 +147,12 @@ def cf_api(endpoint, method, config, headers={}, data=False):
             response = requests.request(method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers)
         else:
             response = requests.request(method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers, json=data)
+        if response.ok:
+            return response.json()
+        else:
+            print("📈 Error sending '" + method + "' request to '" + response.url + "':")
+            print(response.text)
+            return None
     except requests.exceptions.RequestException as err:
         print("OOps: Something Else",err)
     except requests.exceptions.HTTPError as errh:
@@ -156,12 +162,9 @@ def cf_api(endpoint, method, config, headers={}, data=False):
     except requests.exceptions.Timeout as errt:
         print("Timeout Error:",errt)
 
-    if response.ok:
-        return response.json()
-    else:
-        print("📈 Error sending '" + method + "' request to '" + response.url + "':")
-        print(response.text)
-        return None
+    print("📈 Error sending '" + method + "' request to '" + response.url)
+
+    return None
 
 def updateIPs(ips):
     for ip in ips.values():
