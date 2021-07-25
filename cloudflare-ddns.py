@@ -1,4 +1,5 @@
-import requests, json, sys, signal, os, time, threading, datetime
+import requests, json, sys, signal, os, time, threading
+from datetime import datetime
 
 class GracefulExit:
   def __init__(self):
