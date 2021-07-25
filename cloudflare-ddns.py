@@ -42,29 +42,38 @@ def getIPs():
     response = None
     global ipv4_enabled
     global ipv6_enabled
-    date_time = getDateTime()
     if ipv4_enabled:
         #Check ip
-        try:
-            response = requests.get("https://1.1.1.1/cdn-cgi/trace")
-            if response.ok:
-                a = response.text.split("\n")
-            else:
-                print("{0} 📈 Error sending Get request to {1}: ".format(date_time, response.url))
-                print(response.text)
-                return None
-        except requests.exceptions.RequestException as err:
-            print("{0} OOps: Something Else {1}".format(date_time, err))
-            return None
-        except requests.exceptions.HTTPError as errh:
-            print("{0} Http Error: {1}".format(date_time,errh))
-            return None
-        except requests.exceptions.ConnectionError as errc:
-            print("{0} Error Connecting: {1}".format(date_time, errc))
-            return None
-        except requests.exceptions.Timeout as errt:
-            print("{0} Timeout Error: {1}".format(date_time, errt))
-            return None
+        loopcount = 0
+        while True:
+            date_time = getDateTime()
+            if loopcount > 6:
+                break
+            if loopcount > 0:
+                time.sleep(60)
+                print("{0} Now let me continue...".format(date_time))
+            loopcount += 1
+            try:
+                response = requests.get("https://1.1.1.1/cdn-cgi/trace")
+                if response.ok:
+                    a = response.text.split("\n")
+                    break
+                else:
+                    print("{0} 📈 Error sending Get request to {1}: ".format(date_time, response.url))
+                    print(response.text)
+                    continue
+            except requests.exceptions.RequestException as err:
+                print("{0} OOps: Something Else {1}".format(date_time, err))
+                continue
+            except requests.exceptions.HTTPError as errh:
+                print("{0} Http Error: {1}".format(date_time,errh))
+                continue
+            except requests.exceptions.ConnectionError as errc:
+                print("{0} Error Connecting: {1}".format(date_time, errc))
+                continue
+            except requests.exceptions.Timeout as errt:
+                print("{0} Timeout Error: {1}".format(date_time, errt))
+                continue
 
         try:
             a.pop()
@@ -206,9 +215,8 @@ def updateIPs(ips):
         for ip in ips.values():
             commitRecord(ip)
     else:
-        now = datetime.now() # current date and time
-        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
-        print("{0} OOps: Something wrong, No ip detected".format(date_time))
+        date_time = getDateTime()
+        print("{0} OOps: Something wrong, No ip detected, waiting for the next time".format(date_time))
 
 if __name__ == '__main__':
     PATH = os.getcwd() + "/"
