@@ -1,4 +1,4 @@
-import requests, json, sys, signal, os, time, threading
+import requests, json, sys, signal, os, time, threading, datetime
 
 class GracefulExit:
   def __init__(self):
@@ -14,6 +14,8 @@ def deleteEntries(type):
     # Helper function for deleting A or AAAA records
     # in the case of no IPv4 or IPv6 connection, yet
     # existing A or AAAA records are found.
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     for option in config["cloudflare"]:
         answer = cf_api(
             "zones/" + option['zone_id'] + "/dns_records?per_page=100&type=" + type,
@@ -26,30 +28,54 @@ def deleteEntries(type):
         cf_api(
             "zones/" + option['zone_id'] + "/dns_records/" + identifier, 
             "DELETE", option)
-        print("🗑️ Deleted stale record " + identifier)
+        print("{0} 🗑️ Deleted stale record {1}".format(date_time, identifier))
 
 def getIPs():
     a = None
     aaaa = None
+    response = None
     global ipv4_enabled
     global ipv6_enabled
     if ipv4_enabled:
+        #Check ip
         try:
-            a = requests.get("https://1.1.1.1/cdn-cgi/trace").text.split("\n")
+            response = requests.get("https://1.1.1.1/cdn-cgi/trace")
+            if response.ok:
+                a = response.text.split("\n")
+            else:
+                print("{0} 📈 Error sending Get request to {1}: ".format(date_time, response.url))
+                print(response.text)
+                return None
+        except requests.exceptions.RequestException as err:
+            print("{0} OOps: Something Else {1}".format(date_time, err))
+            return None
+        except requests.exceptions.HTTPError as errh:
+            print("{0} Http Error: {1}".format(date_time,errh))
+            return None
+        except requests.exceptions.ConnectionError as errc:
+            print("{0} Error Connecting: {1}".format(date_time, errc))
+            return None
+        except requests.exceptions.Timeout as errt:
+            print("{0} Timeout Error: {1}".format(date_time, errt))
+            return None
+
+        try:
             a.pop()
             a = dict(s.split("=") for s in a)["ip"]
-        except Exception:
+        except Exception as e:
             global shown_ipv4_warning
             if not shown_ipv4_warning:
                 shown_ipv4_warning = True
                 print("🧩 IPv4 not detected")
-            deleteEntries("A")
+            # Always use IPv4,
+            # deleteEntries("A")
+
     if ipv6_enabled:
         try:
             aaaa = requests.get("https://[2606:4700:4700::1111]/cdn-cgi/trace").text.split("\n")
             aaaa.pop()
             aaaa = dict(s.split("=") for s in aaaa)["ip"]
-        except Exception:
+        except Exception as e:
             global shown_ipv6_warning
             if not shown_ipv6_warning:
                 shown_ipv6_warning = True
@@ -69,6 +95,8 @@ def getIPs():
     return ips
 
 def commitRecord(ip):
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     for option in config["cloudflare"]:
         subdomains = option["subdomains"]
         response = cf_api("zones/" + option['zone_id'], "GET", option)
@@ -113,23 +141,26 @@ def commitRecord(ip):
                                 modified = True
             if identifier:
                 if modified:
-                    print("📡 Updating record " + str(record))
+                    print("{0} 📡 Updating record {1}".format(date_time,record))
                     response = cf_api(
                         "zones/" + option['zone_id'] + "/dns_records/" + identifier,
                         "PUT", option, {}, record)
             else:
-                print("➕ Adding new record " + str(record))
+                print("{0} ➕ Adding new record {1}".format(date_time,record))
                 response = cf_api(
                     "zones/" + option['zone_id'] + "/dns_records", "POST", option, {}, record)
             for identifier in duplicate_ids:
                 identifier = str(identifier)
-                print("🗑️ Deleting stale record " + identifier)
+                print("{0} 🗑️ Deleting stale record {1}".format(date_time, identifier))
                 response = cf_api(
                     "zones/" + option['zone_id'] + "/dns_records/" + identifier,
                     "DELETE", option)
     return True
 
 def cf_api(endpoint, method, config, headers={}, data=False):
+    now = datetime.now() # current date and time
+    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+
     api_token = config['authentication']['api_token']
     if api_token != '' and api_token != 'api_token_here':
         headers = {
@@ -150,31 +181,34 @@ def cf_api(endpoint, method, config, headers={}, data=False):
         if response.ok:
             return response.json()
         else:
-            print("📈 Error sending '" + method + "' request to '" + response.url + "':")
+            print("{0} 📈 Error sending {1} request to {2}:".format(date_time, method, response.url))
             print(response.text)
             return None
     except requests.exceptions.RequestException as err:
-        print("OOps: Something Else",err)
+        print("{0} OOps: Something Else {1}".format(date_time, err))
     except requests.exceptions.HTTPError as errh:
-        print("Http Error:",errh)
+        print("{0} Http Error: {1}".format(date_time,errh))
     except requests.exceptions.ConnectionError as errc:
-        print("Error Connecting:",errc)
+        print("{0} Error Connecting: {1}".format(date_time, errc))
     except requests.exceptions.Timeout as errt:
-        print("Timeout Error:",errt)
-
-    print("📈 Error sending '" + method + "' request to '" + response.url)
+        print("{0} Timeout Error: {1}".format(date_time, errt))
 
     return None
 
 def updateIPs(ips):
-    for ip in ips.values():
-        commitRecord(ip)
+    if ips is not None:
+        for ip in ips.values():
+            commitRecord(ip)
+    else:
+        now = datetime.now() # current date and time
+        date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+        print("{0} OOps: Something wrong, No ip detected".format(date_time))
 
 if __name__ == '__main__':
     PATH = os.getcwd() + "/"
     version = float(str(sys.version_info[0]) + "." + str(sys.version_info[1]))
-    shown_ipv4_warning = True
-    shown_ipv6_warning = True
+    shown_ipv4_warning = False
+    shown_ipv6_warning = False
     ipv4_enabled = True
     ipv6_enabled = True
     delaytime = 15
@@ -202,12 +236,14 @@ if __name__ == '__main__':
         if(len(sys.argv) > 1):
             if(sys.argv[1] == "--repeat"):
                 delay = delaytime * 60
+                now = datetime.now() # current date and time
+                date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
                 if ipv4_enabled and ipv6_enabled:
-                    print("🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every {0} minutes".format(delaytime))
+                    print("{0} 🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every {1} minutes".format(date_time, delaytime))
                 elif ipv4_enabled and not ipv6_enabled:
-                    print("🕰️ Updating IPv4 (A) records every {0} minutes".format(delaytime))
+                    print("{0} 🕰️ Updating IPv4 (A) records every {1} minutes".format(date_time, delaytime))
                 elif ipv6_enabled and not ipv4_enabled:
-                    print("🕰️ Updating IPv6 (AAAA) records every {0} minutes".format(delaytime))
+                    print("{0} 🕰️ Updating IPv6 (AAAA) records every {1} minutes".format(date_time, delaytime))
                 next_time = time.time()
                 killer = GracefulExit()
                 prev_ips = None
