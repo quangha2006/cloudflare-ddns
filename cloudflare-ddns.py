@@ -1,5 +1,6 @@
 import requests, json, sys, signal, os, time, threading
 from datetime import datetime, timezone
+import pytz
 
 class GracefulExit:
   def __init__(self):
@@ -13,8 +14,9 @@ class GracefulExit:
 
 def getDateTime():
     now = datetime.now()
-    now.replace(tzinfo=timezone.utc).astimezone(tz=None)
-    return now.strftime("%m/%d/%Y, %H:%M:%S")
+    timezone = pytz.timezone("asia/ho_chi_minh")
+    date_time = now.astimezone(timezone)
+    return date_time.strftime("%m/%d/%Y, %H:%M:%S")
 
 def deleteEntries(type):
     # Helper function for deleting A or AAAA records
