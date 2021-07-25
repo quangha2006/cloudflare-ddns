@@ -1,5 +1,5 @@
 import requests, json, sys, signal, os, time, threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 class GracefulExit:
   def __init__(self):
@@ -11,12 +11,15 @@ class GracefulExit:
     print("🛑 Stopping main thread...")
     self.kill_now.set()
 
+def getDateTime():
+    now = datetime.now()
+    now.replace(tzinfo=timezone.utc).astimezone(tz=None)
+    return now.strftime("%m/%d/%Y, %H:%M:%S")
+
 def deleteEntries(type):
     # Helper function for deleting A or AAAA records
     # in the case of no IPv4 or IPv6 connection, yet
     # existing A or AAAA records are found.
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
     for option in config["cloudflare"]:
         answer = cf_api(
             "zones/" + option['zone_id'] + "/dns_records?per_page=100&type=" + type,
@@ -29,7 +32,7 @@ def deleteEntries(type):
         cf_api(
             "zones/" + option['zone_id'] + "/dns_records/" + identifier, 
             "DELETE", option)
-        print("{0} 🗑️ Deleted stale record {1}".format(date_time, identifier))
+        print("{0} 🗑️ Deleted stale record {1}".format(getDateTime(), identifier))
 
 def getIPs():
     a = None
@@ -37,6 +40,7 @@ def getIPs():
     response = None
     global ipv4_enabled
     global ipv6_enabled
+    date_time = getDateTime()
     if ipv4_enabled:
         #Check ip
         try:
@@ -96,8 +100,7 @@ def getIPs():
     return ips
 
 def commitRecord(ip):
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+    date_time = getDateTime()
     for option in config["cloudflare"]:
         subdomains = option["subdomains"]
         response = cf_api("zones/" + option['zone_id'], "GET", option)
@@ -159,8 +162,8 @@ def commitRecord(ip):
     return True
 
 def cf_api(endpoint, method, config, headers={}, data=False):
-    now = datetime.now() # current date and time
-    date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+
+    date_time = getDateTime()
 
     api_token = config['authentication']['api_token']
     if api_token != '' and api_token != 'api_token_here':
@@ -237,8 +240,7 @@ if __name__ == '__main__':
         if(len(sys.argv) > 1):
             if(sys.argv[1] == "--repeat"):
                 delay = delaytime * 60
-                now = datetime.now() # current date and time
-                date_time = now.strftime("%m/%d/%Y, %H:%M:%S")
+                date_time = getDateTime()
                 if ipv4_enabled and ipv6_enabled:
                     print("{0} 🕰️ Updating IPv4 (A) & IPv6 (AAAA) records every {1} minutes".format(date_time, delaytime))
                 elif ipv4_enabled and not ipv6_enabled:
