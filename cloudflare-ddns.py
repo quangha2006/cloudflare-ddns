@@ -59,8 +59,7 @@ def getIPs():
                     a = response.text.split("\n")
                     break
                 else:
-                    print("{0} 📈 Error sending Get request to {1}: ".format(date_time, response.url))
-                    print(response.text)
+                    print("{0} 📈 Error sending Get request to {1} with ErrorCode: {2}".format(date_time, response.url, response.status_code))
                     continue
             except requests.exceptions.RequestException as err:
                 print("{0} OOps: Something Else {1}".format(date_time, err))
@@ -196,8 +195,7 @@ def cf_api(endpoint, method, config, headers={}, data=False):
         if response.ok:
             return response.json()
         else:
-            print("{0} 📈 Error sending {1} request to {2}:".format(date_time, method, response.url))
-            print(response.text)
+            print("{0} 📈 Error sending {1} request to {2} with ErrorCode: {3}".format(date_time, method, response.url, response.status_code))
             return None
     except requests.exceptions.RequestException as err:
         print("{0} OOps: Something Else {1}".format(date_time, err))
