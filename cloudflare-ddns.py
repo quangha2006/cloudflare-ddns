@@ -188,6 +188,7 @@ def cf_api(endpoint, method, config, headers={}, data=False):
         }
 
     try:
+        response = None
         if(data == False):
             response = requests.request(method, "https://api.cloudflare.com/client/v4/" + endpoint, headers=headers)
         else:
