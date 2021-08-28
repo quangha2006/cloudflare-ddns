@@ -86,6 +86,7 @@ def getIPs():
             # deleteEntries("A")
 
     if ipv6_enabled:
+        date_time = getDateTime()
         try:
             aaaa = requests.get("https://[2606:4700:4700::1111]/cdn-cgi/trace").text.split("\n")
             aaaa.pop()
@@ -98,11 +99,13 @@ def getIPs():
             deleteEntries("AAAA")
     ips = {}
     if(a is not None):
+        print("{0} Checked ipv4: {1}".format(date_time, a))
         ips["ipv4"] = {
             "type": "A",
             "ip": a
         }
     if(aaaa is not None):
+        print("{0} Checked Ipv6: {1}".format(date_time, a))
         ips["ipv6"] = {
             "type": "AAAA",
             "ip": aaaa
@@ -217,6 +220,15 @@ def updateIPs(ips):
         date_time = getDateTime()
         print("{0} OOps: Something wrong, No ip detected, waiting for the next time".format(date_time))
 
+def readConfigFile(pathConfig):
+    try:
+        with open(pathConfig) as config_file:
+            configLoaded = json.loads(config_file.read())
+    except Exception as e:
+        print("😡 Error reading {0!s}, Exception: {1!s}".format(pathConfig, e))
+        return None
+    return configLoaded
+
 if __name__ == '__main__':
     PATH = os.getcwd() + "/"
     version = float(str(sys.version_info[0]) + "." + str(sys.version_info[1]))
@@ -229,13 +241,9 @@ if __name__ == '__main__':
     if(version < 3.5):
         raise Exception("🐍 This script requires Python 3.5+")
 
-    config = None
-    try:
-        with open(PATH + "config.json") as config_file:
-            config = json.loads(config_file.read())
-    except Exception as e:
-        print("😡 Error reading config.json, Exception: {0}".format(e))
-        time.sleep(60) # wait 60 seconds to prevent excessive logging on docker auto restart
+    config = readConfigFile(PATH + "config.json")
+    if config is None:
+        time.sleep(120) # wait 60 seconds to prevent excessive logging on docker auto restart
 
     if config is not None:
         try:
@@ -260,9 +268,18 @@ if __name__ == '__main__':
                 killer = GracefulExit()
                 prev_ips = None
                 while True:
+                    # Update config
+                    config = readConfigFile(PATH + "config.json")
+
+                    if config is None:
+                        ipv4_enabled = config["a"]
+                        ipv6_enabled = config["aaaa"]
+                        delay = config["repeattime"] * 60
+                        updateIPs(getIPs())
+                    else: # if any problem with the config file
+                        delay = 600
                     if killer.kill_now.wait(delay):
                         break
-                    updateIPs(getIPs())
             else:
                 print("❓ Unrecognized parameter '" + sys.argv[1] + "'. Stopping now.")
         else:
