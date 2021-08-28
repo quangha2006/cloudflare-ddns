@@ -50,8 +50,8 @@ def getIPs():
             if loopcount > 6:
                 break
             if loopcount > 0:
-                time.sleep(60)
-                print("{0} Now let me continue...".format(date_time))
+                time.sleep(120)
+                print("{0} Now let me continue... {1}".format(date_time, loopcount))
             loopcount += 1
             try:
                 response = requests.get("https://1.1.1.1/cdn-cgi/trace")
