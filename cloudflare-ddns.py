@@ -271,7 +271,7 @@ if __name__ == '__main__':
                     # Update config
                     config = readConfigFile(PATH + "config.json")
 
-                    if config is None:
+                    if config is not None:
                         ipv4_enabled = config["a"]
                         ipv6_enabled = config["aaaa"]
                         delay = config["repeattime"] * 60
