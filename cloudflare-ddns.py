@@ -105,7 +105,7 @@ def getIPs():
             "ip": a
         }
     if(aaaa is not None):
-        print("{0} Checked Ipv6: {1}".format(date_time, a))
+        print("{0} Checked Ipv6: {1}".format(date_time, aaaa))
         ips["ipv6"] = {
             "type": "AAAA",
             "ip": aaaa
