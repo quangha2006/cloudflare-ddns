@@ -99,13 +99,11 @@ def getIPs():
             deleteEntries("AAAA")
     ips = {}
     if(a is not None):
-        print("{0} Checked ipv4: {1}".format(date_time, a))
         ips["ipv4"] = {
             "type": "A",
             "ip": a
         }
     if(aaaa is not None):
-        print("{0} Checked Ipv6: {1}".format(date_time, aaaa))
         ips["ipv6"] = {
             "type": "AAAA",
             "ip": aaaa
