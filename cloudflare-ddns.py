@@ -156,7 +156,7 @@ def commitRecord(ip):
                                 modified = True
             if identifier:
                 if modified:
-                    if record['name'] == '':
+                    if record['name'] is None:
                         record['name'] = '@'
                     print("{0} 📡 Updating record {1}".format(date_time,record))
                     response = cf_api(
