@@ -239,7 +239,7 @@ if __name__ == '__main__':
     delaytime = 15
 
     if(version < 3.5):
-        raise Exception("🐍 This script requires Python 3.5+")
+        raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(version))
 
     config = readConfigFile(PATH + "config.json")
     if config is None:
