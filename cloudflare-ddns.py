@@ -241,7 +241,7 @@ if __name__ == '__main__':
     delaytime = 15
 
     if(version_major < 3 or (version_major == 3 and version_minor < 5) ):
-        raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(str(sys.version_info[0])))
+        raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(str(sys.version_info)))
 
     config = readConfigFile(PATH + "config.json")
     if config is None:
