@@ -231,15 +231,17 @@ def readConfigFile(pathConfig):
 
 if __name__ == '__main__':
     PATH = os.getcwd() + "/"
-    version = float(str(sys.version_info[0]) + "." + str(sys.version_info[1]))
+    version_major = int(str(sys.version_info[0]))
+    version_minor = int(str(sys.version_info[1]))
+    version_micro = int(str(sys.version_info[2]))
     shown_ipv4_warning = False
     shown_ipv6_warning = False
     ipv4_enabled = True
     ipv6_enabled = True
     delaytime = 15
 
-    if(version < 3.5):
-        raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(version))
+    if(version_major < 3 or (version_major == 3 and version_minor < 5) ):
+        raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(str(sys.version_info[0])))
 
     config = readConfigFile(PATH + "config.json")
     if config is None:
