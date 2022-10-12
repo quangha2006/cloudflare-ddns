@@ -271,7 +271,7 @@ if __name__ == '__main__':
                 prev_ips = None
                 while True:
                     # Update config
-                    config = readConfigFile(PATH + "config.json")
+                    config = readConfigFile(PATH + "/config.json")
 
                     if config is not None:
                         ipv4_enabled = config["a"]
