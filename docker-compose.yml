@@ -10,5 +10,5 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - cloudflare-ddns:/data
+      - ./:/data
     restart: unless-stopped
