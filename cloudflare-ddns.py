@@ -230,7 +230,7 @@ def readConfigFile(pathConfig):
     return configLoaded
 
 if __name__ == '__main__':
-    PATH = os.getcwd() + "/"
+    PATH = "/data"
     version_major = int(str(sys.version_info[0]))
     version_minor = int(str(sys.version_info[1]))
     version_micro = int(str(sys.version_info[2]))
@@ -243,7 +243,7 @@ if __name__ == '__main__':
     if(version_major < 3 or (version_major == 3 and version_minor < 5) ):
         raise Exception("🐍 This script requires Python 3.5+, Current Version = {0}".format(str(sys.version_info)))
 
-    config = readConfigFile(PATH + "config.json")
+    config = readConfigFile(PATH + "/config.json")
     if config is None:
         time.sleep(120) # wait 60 seconds to prevent excessive logging on docker auto restart
 
