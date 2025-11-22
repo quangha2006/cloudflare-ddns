@@ -1,2 +1,5 @@
-requests==2.25.0
+requests
 pytz
+dnspython
+argparse
+urllib3

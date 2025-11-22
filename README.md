@@ -1,5 +1,3 @@
-<p align="center"><a href="https://timknowsbest.com/free-dynamic-dns" target="_blank" rel="noopener noreferrer"><img width="1024" src="feature-graphic.jpg" alt="Cloudflare DDNS"/></a></p>
-
 # 🚀 Cloudflare DDNS
 
 Access your home network remotely via a custom domain name without a static IP!
