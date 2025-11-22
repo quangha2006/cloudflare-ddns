@@ -10,5 +10,5 @@ services:
       - PUID=1000
       - PGID=1000
     volumes:
-      - ./:/data
+      - ./config.json:/data/config.json:ro
     restart: unless-stopped

@@ -7,4 +7,4 @@ source ./venv/bin/activate
 pip3 install -r requirements.txt
 
 cd $DIR
-python3 cloudflare-ddns.py
+python3 cloudflare-ddns.py --config /data/config.json
