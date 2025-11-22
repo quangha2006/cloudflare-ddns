@@ -14,4 +14,4 @@ FROM dependencies AS release
 # copy project source file(s)
 WORKDIR /
 COPY cloudflare-ddns.py .
-CMD ["python3", "-u", "/cloudflare-ddns.py", "--repeat"]
+CMD ["python3", "-u", "/cloudflare-ddns.py", "--repeat", "--config", "/data/config.json"]
