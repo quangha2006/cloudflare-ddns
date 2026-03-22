@@ -44,11 +44,12 @@ def custom_getaddrinfo(host, port, family=0, type=0, proto=0, flags=0):
         try:
             if family == socket.AF_INET6:
                 answer = resolver.resolve(host, 'AAAA')
+                ip = answer[0].to_text()
+                return [(socket.AF_INET6, socket.SOCK_STREAM, proto, '', (ip, port, 0, 0))]
             else:
                 answer = resolver.resolve(host, 'A')
-
-            ip = answer[0].to_text()
-            return [(socket.AF_INET, socket.SOCK_STREAM, proto, '', (ip, port))]
+                ip = answer[0].to_text()
+                return [(socket.AF_INET, socket.SOCK_STREAM, proto, '', (ip, port))]
         except Exception:
             # Per request: do NOT fallback — raise standard getaddrinfo error
             raise socket.gaierror(socket.EAI_NONAME, 'Name or service not known')
